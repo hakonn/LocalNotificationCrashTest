@@ -1,0 +1,66 @@
+﻿@page "/"
+@using Newtonsoft.Json
+@using Plugin.LocalNotification
+
+<h1>Hello, world!</h1>
+
+<button @onclick="GenerateNotification">Click me to generate a notification</button>
+
+<br />
+<br />
+
+@if(notes != null)
+{
+    <div>
+        <h2>GetPendingNotificationList:</h2>
+        <pre>
+            @notes
+        </pre>
+    </div>
+}
+
+@code{
+    private string notes = null;
+    protected override async Task OnInitializedAsync()
+    {
+        await ListPendingNotifications();   
+    }
+
+    private async Task ListPendingNotifications() {
+        var notifications = await LocalNotificationCenter.Current.GetPendingNotificationList();
+        notes = JsonConvert.SerializeObject(notifications, Formatting.Indented);
+
+        if (notifications != null && notifications.Any())
+        {
+            foreach (var item in notifications)
+            {
+                if (item.Schedule.NotifyTime == null)
+                {
+                    //Should not be null since NotifyTime is set below, DateTime.Now.AddMinutes(1).
+                    throw new Exception("NotifyTime is null");
+                }
+            }
+        }
+    }
+
+    private async Task GenerateNotification()
+    {
+        var notification = new NotificationRequest
+            {
+                NotificationId = 1000,
+                Title = "A fantastic notification",
+                Description = "",
+                CategoryType = NotificationCategoryType.Alarm,
+                Schedule =
+                        {
+                            NotifyTime = DateTime.Now.AddMinutes(1),
+                            NotifyRepeatInterval = TimeSpan.FromHours(24),
+                            RepeatType = NotificationRepeat.TimeInterval
+                        }
+            };
+
+        await LocalNotificationCenter.Current.Show(notification);
+
+        await ListPendingNotifications();
+    }
+}
