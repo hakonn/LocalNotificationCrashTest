@@ -28,10 +28,11 @@
 
     private async Task ListPendingNotifications() {
         var notifications = await LocalNotificationCenter.Current.GetPendingNotificationList();
-        notes = JsonConvert.SerializeObject(notifications, Formatting.Indented);
 
         if (notifications != null && notifications.Any())
         {
+            notes = JsonConvert.SerializeObject(notifications, Formatting.Indented);
+
             foreach (var item in notifications)
             {
                 if (item.Schedule.NotifyTime == null)
